@@ -38,14 +38,14 @@ typedef struct {
 void draw_callback(Canvas* canvas, void* ctx) {
     // UNUSED(ctx);
     CalculatorApp* clc_app = ctx;
-    furi_mutex_acquire(clc_app->mutex, FuriWaitForever);
+    furi_check(furi_mutex_acquire(clc_app->mutex, FuriWaitForever) == FuriStatusOk);
+
+    char buffer[8];
+    snprintf(buffer, sizeof(buffer) + 1, "%lf", clc_app->calculator->result);
+
+    // elements_bubble_str(canvas, 128 / 2, 64 / 2, "b", AlignCenter, AlignCenter);
+    elements_bubble_str(canvas, 128 / 2, 64 / 2, buffer, AlignCenter, AlignCenter);
     furi_mutex_release(clc_app->mutex);
-
-    // char buffer[8];
-    // snprintf(buffer, sizeof(buffer) + 1, "%lf", clc_app->calculator->result);
-
-    elements_bubble_str(canvas, 128 / 2, 64 / 2, "b", AlignCenter, AlignCenter);
-    // elements_bubble_str(canvas, 128 / 2, 64 / 2, buffer, AlignCenter, AlignCenter);
 }
 
 void input_callback(InputEvent* evt, void* ctx) {
