@@ -150,6 +150,8 @@ int32_t calculator_main(void* p) {
 
     furi_assert(calc_calc.value == 2); // VALUE IS CORRECT. calc_calc.value = 2!!
 
+    clc_app->calculator->result = calc_calc.value;
+
     bool running = true;
 
     InputEvent evt;
