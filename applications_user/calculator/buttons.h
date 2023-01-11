@@ -8,10 +8,10 @@ typedef struct {
     uint8_t text_x;
     uint8_t text_y;
     Font text_font;
-    char const* text_text;
+    const char* text_text;
 
-    uint8_t row;
-    uint8_t column;
+    int8_t row;
+    int8_t column;
 
     // CalculatorFunction* function;
 } CalculatorDisplayButton;

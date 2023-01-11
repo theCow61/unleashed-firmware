@@ -211,6 +211,22 @@ int32_t calculator_main(void* p) {
                                                       [clc_app->selected_button->column];
                     break;
                 }
+
+                if(clc_app->selected_button ==
+                   calculator_display_button_grid[clc_app->selected_button->row - 1]
+                                                 [clc_app->selected_button->column]) {
+                    if(clc_app->selected_button->row - 2 < 0) {
+                        clc_app->selected_button =
+                            calculator_display_button_grid[NUMBER_OF_ROWS_BUTTONS - 1]
+                                                          [clc_app->selected_button->column];
+                        break;
+                    }
+                    clc_app->selected_button =
+                        calculator_display_button_grid[clc_app->selected_button->row - 2]
+                                                      [clc_app->selected_button->column];
+                    break;
+                }
+
                 clc_app->selected_button =
                     calculator_display_button_grid[clc_app->selected_button->row - 1]
                                                   [clc_app->selected_button->column];
@@ -221,6 +237,21 @@ int32_t calculator_main(void* p) {
                         calculator_display_button_grid[0][clc_app->selected_button->column];
                     break;
                 }
+
+                if(clc_app->selected_button ==
+                   calculator_display_button_grid[clc_app->selected_button->row + 1]
+                                                 [clc_app->selected_button->column]) {
+                    if(clc_app->selected_button->row + 2 >= (int)NUMBER_OF_ROWS_BUTTONS) {
+                        clc_app->selected_button =
+                            calculator_display_button_grid[0][clc_app->selected_button->column];
+                        break;
+                    }
+                    clc_app->selected_button =
+                        calculator_display_button_grid[clc_app->selected_button->row + 2]
+                                                      [clc_app->selected_button->column];
+                    break;
+                }
+
                 clc_app->selected_button =
                     calculator_display_button_grid[clc_app->selected_button->row + 1]
                                                   [clc_app->selected_button->column];
@@ -232,6 +263,22 @@ int32_t calculator_main(void* p) {
                                                       [NUMBER_OF_COLUMNS_BUTTONS - 1];
                     break;
                 }
+
+                if(clc_app->selected_button ==
+                   calculator_display_button_grid[clc_app->selected_button->row]
+                                                 [clc_app->selected_button->column - 1]) {
+                    if(clc_app->selected_button->column - 2 < 0) {
+                        clc_app->selected_button =
+                            calculator_display_button_grid[clc_app->selected_button->row]
+                                                          [NUMBER_OF_COLUMNS_BUTTONS - 1];
+                        break;
+                    }
+                    clc_app->selected_button =
+                        calculator_display_button_grid[clc_app->selected_button->row]
+                                                      [clc_app->selected_button->column - 2];
+                    break;
+                }
+
                 clc_app->selected_button =
                     calculator_display_button_grid[clc_app->selected_button->row]
                                                   [clc_app->selected_button->column - 1];
@@ -240,6 +287,19 @@ int32_t calculator_main(void* p) {
                 if(clc_app->selected_button->column == NUMBER_OF_COLUMNS_BUTTONS - 1) {
                     clc_app->selected_button =
                         calculator_display_button_grid[clc_app->selected_button->row][0];
+                    break;
+                }
+                if(clc_app->selected_button ==
+                   calculator_display_button_grid[clc_app->selected_button->row]
+                                                 [clc_app->selected_button->column + 1]) {
+                    if(clc_app->selected_button->column + 2 >= (int)NUMBER_OF_COLUMNS_BUTTONS) {
+                        clc_app->selected_button =
+                            calculator_display_button_grid[clc_app->selected_button->row][0];
+                        break;
+                    }
+                    clc_app->selected_button =
+                        calculator_display_button_grid[clc_app->selected_button->row]
+                                                      [clc_app->selected_button->column + 2];
                     break;
                 }
                 clc_app->selected_button =
