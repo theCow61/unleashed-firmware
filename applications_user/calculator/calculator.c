@@ -2,6 +2,7 @@
 #include <gui/gui.h>
 #include <gui/elements.h>
 #include "calculator_functions.h"
+#include "buttons.h"
 
 #define LIMIT_OF_CHAIN 10
 
@@ -10,6 +11,11 @@
 typedef enum {
     CalculatorStatusAwaitingInput,
 } CalculatorStatus;
+
+typedef struct {
+    uint8_t row;
+    uint8_t column;
+} CalculatorDisplayElementGridLocation;
 
 // This will either be evaluated and chained or just chained
 typedef struct {
@@ -33,18 +39,52 @@ typedef struct {
     Calculator* calculator;
 
     FuriMutex* mutex;
+
+    // CalculatorDisplayElementGridLocation selected_grid_element;
+    CalculatorDisplayButton const* selected_button;
 } CalculatorApp;
+
+void draw_buttons(Canvas* canvas, CalculatorApp* clc_app) {
+    for(size_t i = 0; i < NUMBER_OF_ROWS_BUTTONS; i++) {
+        for(size_t j = 0; j < NUMBER_OF_COLUMNS_BUTTONS; j++) {
+            CalculatorDisplayButton const* button = calculator_display_button_grid[i][j];
+            if(button == clc_app->selected_button) {
+                canvas_invert_color(canvas);
+            }
+
+            elements_frame(
+                canvas, button->frame_x, button->frame_y, button->frame_w, button->frame_h);
+
+            canvas_draw_str(canvas, button->text_x, button->text_y, button->text_text);
+
+            if(button == clc_app->selected_button) {
+                canvas_invert_color(canvas);
+            }
+        }
+    }
+}
 
 void draw_callback(Canvas* canvas, void* ctx) {
     // UNUSED(ctx);
+    // UNUSED(canvas);
     CalculatorApp* clc_app = ctx;
     furi_check(furi_mutex_acquire(clc_app->mutex, FuriWaitForever) == FuriStatusOk);
 
-    char buffer[8];
-    snprintf(buffer, sizeof(buffer) + 1, "%lf", clc_app->calculator->result);
+    // char buffer[8];
+    // snprintf(buffer, sizeof(buffer) + 1, "%lf", clc_app->calculator->result);
 
     // elements_bubble_str(canvas, 128 / 2, 64 / 2, "b", AlignCenter, AlignCenter);
-    elements_bubble_str(canvas, 128 / 2, 64 / 2, buffer, AlignCenter, AlignCenter);
+    // elements_bubble_str(canvas, 128 / 2, 64 / 2, buffer, AlignCenter, AlignCenter);
+
+    // elements_frame(canvas, 2, 40, 124, 22);
+    // elements_bubble_str(canvas, 2, 40, )
+
+    // switch(clc_app->selected_grid_element) {
+    // case(CalculatorDisplayElementGridLocation){.column = 0, .row = 0}:
+    // }
+
+    draw_buttons(canvas, clc_app);
+
     furi_mutex_release(clc_app->mutex);
 }
 
@@ -106,6 +146,8 @@ CalculatorApp* calculator_app_alloc() {
 
     clc_app->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
 
+    clc_app->selected_button = calculator_display_button_grid[0][0];
+
     clc_app->calculator = calculator_alloc();
     clc_app->vp = view_port_alloc();
     view_port_enabled_set(clc_app->vp, true);
@@ -136,6 +178,7 @@ int32_t calculator_main(void* p) {
 
     FURI_LOG_E("Calculator", "Yo");
     CalculatorApp* clc_app = calculator_app_alloc();
+    // furi_mutex_acquire(clc_app->mutex, FuriWaitForever);
     CalculatorCalculation* first = calculator_calculation_alloc(&CalculatorFunctionAdd, 10);
     CalculatorCalculation* second = calculator_calculation_alloc(&CalculatorFunctionDivide, 5);
     calculator_add_calculator_calculation(clc_app->calculator, first);
@@ -151,30 +194,72 @@ int32_t calculator_main(void* p) {
     furi_assert(calc_calc.value == 2); // VALUE IS CORRECT. calc_calc.value = 2!!
 
     clc_app->calculator->result = calc_calc.value;
+    // furi_mutex_release(clc_app->mutex);
 
     bool running = true;
 
     InputEvent evt;
 
-    while(running) {
-        if(furi_message_queue_get(clc_app->msq, &evt, FuriWaitForever) == FuriStatusOk) {
-            if(evt.type == InputTypePress) {
-                switch(evt.key) {
-                case InputKeyUp:
-                case InputKeyDown:
-                case InputKeyLeft:
-                case InputKeyRight:
-                case InputKeyOk:
-                    break;
-                case InputKeyBack:
-                    running = false;
-                default:
+    while(running && furi_message_queue_get(clc_app->msq, &evt, FuriWaitForever) == FuriStatusOk) {
+        // if(furi_message_queue_get(clc_app->msq, &evt, FuriWaitForever) == FuriStatusOk) {
+        if(evt.type == InputTypePress) {
+            switch(evt.key) {
+            case InputKeyUp:
+                if(clc_app->selected_button->row == 0) {
+                    clc_app->selected_button =
+                        calculator_display_button_grid[NUMBER_OF_ROWS_BUTTONS - 1]
+                                                      [clc_app->selected_button->column];
                     break;
                 }
+                clc_app->selected_button =
+                    calculator_display_button_grid[clc_app->selected_button->row - 1]
+                                                  [clc_app->selected_button->column];
+                break;
+            case InputKeyDown:
+                if(clc_app->selected_button->row == NUMBER_OF_ROWS_BUTTONS - 1) {
+                    clc_app->selected_button =
+                        calculator_display_button_grid[0][clc_app->selected_button->column];
+                    break;
+                }
+                clc_app->selected_button =
+                    calculator_display_button_grid[clc_app->selected_button->row + 1]
+                                                  [clc_app->selected_button->column];
+                break;
+            case InputKeyLeft:
+                if(clc_app->selected_button->column == 0) {
+                    clc_app->selected_button =
+                        calculator_display_button_grid[clc_app->selected_button->row]
+                                                      [NUMBER_OF_COLUMNS_BUTTONS - 1];
+                    break;
+                }
+                clc_app->selected_button =
+                    calculator_display_button_grid[clc_app->selected_button->row]
+                                                  [clc_app->selected_button->column - 1];
+                break;
+            case InputKeyRight:
+                if(clc_app->selected_button->column == NUMBER_OF_COLUMNS_BUTTONS - 1) {
+                    clc_app->selected_button =
+                        calculator_display_button_grid[clc_app->selected_button->row][0];
+                    break;
+                }
+                clc_app->selected_button =
+                    calculator_display_button_grid[clc_app->selected_button->row]
+                                                  [clc_app->selected_button->column + 1];
+                break;
+            case InputKeyOk:
+                break;
+            case InputKeyBack:
+                running = false;
+                break;
+            default:
+                break;
             }
+            // }
         }
         view_port_update(clc_app->vp);
     }
+
+    calculator_app_free(clc_app);
 
     return 0;
 }
